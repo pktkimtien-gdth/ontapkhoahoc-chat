@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khám Phá Khoa Học 5 - Vùng Đất Kì Diệu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* 3D Button Styles */
+        .btn-3d {
+            transition: all 0.1s ease-in-out;
+            position: relative;
+            box-shadow: 0 8px 0 rgba(0,0,0,0.2);
+            transform: translateY(0);
+        }
+        .btn-3d:active {
+            box-shadow: 0 0px 0 rgba(0,0,0,0.2);
+            transform: translateY(8px);
+        }
+        
+        .btn-blue {
+            background: linear-gradient(180deg, #32CCBC 0%, #15A092 100%);
+            color: white;
+            box-shadow: 0 8px 0 #0D7A6F;
+        }
+        .btn-blue:active { box-shadow: 0 0px 0 #0D7A6F; }
+
+        .btn-orange {
+            background: linear-gradient(180deg, #FFB75E 0%, #ED8F03 100%);
+            color: white;
+            box-shadow: 0 8px 0 #C97800;
+        }
+        .btn-orange:active { box-shadow: 0 0px 0 #C97800; }
+
+        .btn-red {
+            background: linear-gradient(180deg, #FF5E62 0%, #FF9966 100%);
+            color: white;
+            box-shadow: 0 8px 0 #D34347;
+        }
+        .btn-red:active { box-shadow: 0 0px 0 #D34347; }
+
+        .btn-option {
+            background: white;
+            color: #333;
+            box-shadow: 0 6px 0 #E2E8F0;
+            border: 2px solid #E2E8F0;
+            border-radius: 1rem;
+        }
+        .btn-option:hover {
+            border-color: #4facfe;
+            background-color: #f0f9ff;
+        }
+        .btn-option:active {
+            box-shadow: 0 0px 0 #E2E8F0;
+            transform: translateY(6px);
+        }
+
+        /* Fun Animations */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .floating { animation: float 3s ease-in-out infinite; }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .pop-in { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            border: 4px solid rgba(255,255,255,0.5);
+        }
+
+        /* 3D Emoji Avatar */
+        .emoji-3d {
+            font-size: 5rem;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3));
+        }
+
+        /* Canvas for fireworks */
+        #fireworks-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .blank-slot {
+            display: inline-block;
+            min-width: 80px;
+            height: 36px;
+            border-bottom: 3px dashed #32CCBC;
+            margin: 0 5px;
+            text-align: center;
+            font-weight: bold;
+            color: #15A092;
+            cursor: pointer;
+            padding: 0 10px;
+            vertical-align: bottom;
+            background: #f0f9ff;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .blank-slot.filled { border-style: solid; background: #e0f2fe; color: #0f766e; border-color: #32CCBC;}
+        .word-bank-btn {
+            background: white; border: 2px solid #cbd5e1; border-radius: 12px; padding: 8px 16px; font-weight: bold; cursor: pointer; transition: all 0.2s; color: #334155;
+        }
+        .word-bank-btn:hover { border-color: #32CCBC; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .word-bank-btn.selected { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; border-color: #cbd5e1; }
+        .word-bank-btn.active { border-color: #f59e0b; background: #fef3c7; color: #b45309; }
+
+        .match-row { display: flex; align-items: stretch; gap: 10px; margin-bottom: 12px; }
+        .match-left { flex: 1; background: #fff; padding: 12px; border-radius: 12px; border: 2px solid #e2e8f0; font-weight: bold; display: flex; align-items: center; justify-content: center; text-align: center; }
+        .match-slot { flex: 1; background: #f8fafc; padding: 12px; border-radius: 12px; border: 2px dashed #cbd5e1; cursor: pointer; text-align: center; min-height: 52px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;}
+        .match-slot.filled { border-style: solid; border-color: #32CCBC; background: #e0f2fe; font-weight: bold; color: #0f766e;}
+        .match-slot:hover:not(.filled) { background: #f1f5f9; border-color: #94a3b8; }
+    </style>
+</head>
+<body class="text-gray-800 flex items-center justify-center p-4">
+
+    <canvas id="fireworks-canvas"></canvas>
+
+    <div id="app-container" class="w-full max-w-2xl">
+        
+        <!-- 1. START SCREEN -->
+        <div id="start-screen" class="glass-panel p-8 text-center pop-in">
+            <div class="emoji-3d floating mb-4">🚀🌍</div>
+            <h1 class="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-teal-400 mb-2">Vùng Đất Khoa Học</h1>
+            <p class="text-lg md:text-xl font-semibold text-gray-600 mb-8">Ôn tập Chủ đề Chất (Bài 1 - Bài 6)</p>
+            
+            <div class="max-w-xs mx-auto mb-8">
+                <input type="text" id="player-name" placeholder="Nhập tên nhà khoa học..." class="w-full text-center text-xl p-4 border-4 border-blue-200 rounded-2xl focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100 transition font-bold" maxlength="15">
+            </div>
+
+            <div class="flex flex-col gap-4 max-w-xs mx-auto">
+                <button onclick="startGame()" class="btn-3d btn-blue text-2xl font-bold py-4 px-8 rounded-2xl">BẮT ĐẦU CHƠI</button>
+                <button onclick="showLeaderboard()" class="btn-3d btn-orange text-xl font-bold py-3 px-8 rounded-2xl">🏆 BẢNG XẾP HẠNG</button>
+            </div>
+        </div>
+
+        <!-- 2. GAME SCREEN -->
+        <div id="game-screen" class="hidden">
+            <!-- Header status -->
+            <div class="flex justify-between items-center bg-white/80 backdrop-blur-sm p-4 rounded-2xl shadow-md mb-4 font-bold text-xl">
+                <div class="flex items-center gap-2 text-blue-600">
+                    <span>👤</span> <span id="display-name">Khách</span>
+                </div>
+                <div class="flex items-center gap-2 text-orange-500">
+                    <span>⭐</span> <span id="display-score">0</span> Điểm
+                </div>
+                <div class="flex items-center gap-2 text-teal-600">
+                    <span>📝</span> Câu <span id="question-number">1/10</span>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="glass-panel p-6 md:p-8 relative">
+                <div id="level-badge" class="absolute -top-4 -right-4 bg-gradient-to-r from-pink-500 to-orange-400 text-white font-black px-4 py-2 rounded-xl shadow-lg transform rotate-3">
+                    Mức độ
+                </div>
+
+                <div class="text-center mb-6">
+                    <div id="question-image" class="emoji-3d mb-4">🤔</div>
+                    <h2 id="question-text" class="text-2xl md:text-3xl font-extrabold leading-tight text-gray-800">Câu hỏi nằm ở đây?</h2>
+                </div>
+
+                <div id="options-container" class="w-full">
+                    <!-- Buttons/UI injected via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. EXPLANATION OVERLAY -->
+        <div id="explanation-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-3xl w-full max-w-lg p-8 text-center pop-in shadow-2xl relative overflow-hidden">
+                <!-- Top decoration -->
+                <div id="modal-decor" class="absolute top-0 left-0 w-full h-4 bg-gradient-to-r from-green-400 to-blue-500"></div>
+                
+                <div id="result-emoji" class="text-6xl mb-2">🎉</div>
+                <h2 id="result-title" class="text-3xl font-black mb-4">Chính xác!</h2>
+                <div class="bg-gray-100 p-4 rounded-2xl mb-6 text-left">
+                    <p id="explanation-text" class="text-lg md:text-xl font-semibold text-gray-700">Giải thích nằm ở đây.</p>
+                </div>
+                <button onclick="nextQuestion()" class="btn-3d btn-blue text-xl font-bold py-3 px-10 rounded-2xl w-full">TIẾP TỤC ➔</button>
+            </div>
+        </div>
+
+        <!-- 4. END SCREEN -->
+        <div id="end-screen" class="hidden glass-panel p-8 text-center pop-in">
+            <div class="emoji-3d floating mb-4">🎓</div>
+            <h1 class="text-4xl font-black text-blue-600 mb-2">Hoàn Thành Nhiệm Vụ!</h1>
+            <p id="final-message" class="text-xl font-bold text-gray-600 mb-6">Chúc mừng bạn đã hoàn thành bài ôn tập.</p>
+            
+            <div class="bg-blue-50 border-4 border-blue-200 rounded-3xl p-6 mb-8 inline-block">
+                <p class="text-gray-500 font-bold mb-1">TỔNG ĐIỂM CỦA BẠN</p>
+                <div class="text-6xl font-black text-orange-500">⭐ <span id="final-score">0</span></div>
+            </div>
+
+            <div class="flex flex-col gap-4 max-w-xs mx-auto">
+                <button onclick="saveAndShowLeaderboard()" class="btn-3d btn-orange text-xl font-bold py-4 px-8 rounded-2xl">🏆 XEM BẢNG XẾP HẠNG</button>
+                <button onclick="resetGame()" class="btn-3d btn-blue text-lg font-bold py-3 px-8 rounded-2xl">🔄 CHƠI LẠI TỪ ĐẦU</button>
+            </div>
+        </div>
+
+        <!-- 5. LEADERBOARD SCREEN -->
+        <div id="leaderboard-screen" class="hidden glass-panel p-8 pop-in">
+            <div class="text-center mb-6">
+                <div class="text-5xl mb-2">🏆</div>
+                <h1 class="text-3xl font-black text-orange-500">BẢNG VÀNG DANH DỰ</h1>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-inner border-2 border-gray-100 p-2 mb-6 max-h-64 overflow-y-auto">
+                <ul id="leaderboard-list" class="flex flex-col gap-2">
+                    <!-- List items injected via JS -->
+                </ul>
+            </div>
+
+            <div class="text-center">
+                <button onclick="backToHome()" class="btn-3d btn-blue text-xl font-bold py-3 px-10 rounded-2xl">🏠 VỀ TRANG CHỦ</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const questionBank = [
+            {
+                type: "mc", lesson: 1, level: "Nhận biết",
+                question: "Đất trồng có những thành phần chính nào?",
+                emoji: "🌱",
+                options: [
+                    "Chất khoáng, mùn, không khí, nước.",
+                    "Chỉ có rễ cây và xác sinh vật.",
+                    "Cát, đá, sỏi và thuỷ tinh.",
+                    "Chỉ có nước và chất khoáng."
+                ],
+                correct: 0,
+                explanation: "Đất trồng gồm các thành phần chính là chất khoáng, mùn, không khí và nước. Ngoài ra còn có rễ cây, giun đất, xác sinh vật đang phân hủy (Bài 1)."
+            },
+            {
+                type: "fill", lesson: 1, level: "Hiểu",
+                question: "Điền từ thích hợp vào chỗ trống:\nĐất là lớp bề mặt [0] của vỏ Trái Đất. Nhờ có [1], hạt cát và hạt sét mà đất giữ được nước và chất dinh dưỡng.",
+                emoji: "🧩",
+                words: ["tơi xốp", "chất mùn", "cứng nhắc", "sỏi đá"],
+                correct: ["tơi xốp", "chất mùn"],
+                explanation: "Đất trồng là lớp đất bề mặt tơi xốp của vỏ Trái Đất. Đất giữ được nước và chất dinh dưỡng nhờ các hạt cát, sét và chất mùn (Bài 1)."
+            },
+            {
+                type: "mc", lesson: 2, level: "Vận dụng",
+                question: "Người nông dân thường phủ rơm rạ dưới gốc cây để làm gì?",
+                emoji: "👨‍🌾",
+                options: [
+                    "Để trang trí cho đẹp vườn.",
+                    "Giữ ẩm cho đất và tạo thành mùn tăng dinh dưỡng.",
+                    "Để làm nơi trú ngụ cho các loài sâu bọ.",
+                    "Để rễ cây không mọc lên trên mặt đất."
+                ],
+                correct: 1,
+                explanation: "Phủ rơm rạ giúp giữ ẩm cho đất, giữ ấm cho cây vào mùa đông. Rơm rạ phân hủy sẽ tạo thành mùn, bổ sung chất dinh dưỡng cho đất (Bài 2)."
+            },
+            {
+                type: "mc", lesson: 1, level: "Nhận biết",
+                question: "Sinh vật nào sau đây sống trong đất giúp làm cho đất tơi xốp?", 
+                emoji: "🪱",
+                options: ["Chim sâu", "Giun đất", "Cá rô phi", "Bướm"],
+                correct: 1,
+                explanation: "Giun đất đào hang di chuyển trong đất giúp đất tơi xốp, có thêm không khí. Giun cũng phân huỷ rác hữu cơ tạo mùn cho đất (Bài 1)."
+            },
+            {
+                type: "match", lesson: 2, level: "Hiểu",
+                question: "Ghép nối các hành động với hậu quả tương ứng:", 
+                emoji: "🔗",
+                pairs: [
+                    { left: "Chặt phá rừng bừa bãi", right: "Gây xói mòn đất" },
+                    { left: "Lạm dụng thuốc trừ sâu", right: "Gây ô nhiễm đất" }
+                ],
+                distractors: ["Làm đất tơi xốp hơn"],
+                explanation: "Chặt phá rừng làm mất lớp phủ bảo vệ gây xói mòn đất do mưa rửa trôi. Lạm dụng hoá chất độc hại ngấm vào đất gây ô nhiễm (Bài 2)."
+            },
+            {
+                type: "mc", lesson: 3, level: "Hiểu",
+                question: "Hỗn hợp nào sau đây được gọi là DUNG DỊCH?",
+                emoji: "💧",
+                options: [
+                    "Cát trộn với nước.",
+                    "Gạo trộn với đỗ xanh.",
+                    "Muối hoà tan hoàn toàn vào nước.",
+                    "Hỗn hợp xi măng và cát."
+                ],
+                correct: 2,
+                explanation: "Dung dịch là hỗn hợp mà trong đó chất rắn hoà tan và phân bố đều trong chất lỏng (không còn nhìn thấy riêng từng chất và trong suốt). Nước muối là một dung dịch (Bài 3)."
+            },
+            {
+                type: "mc", lesson: 3, level: "Vận dụng",
+                question: "Để tách được hạt muối ra khỏi nước biển (dung dịch nước muối), người dân vùng biển đã làm gì?",
+                emoji: "🧂",
+                options: [
+                    "Dùng vợt lưới để vớt muối.",
+                    "Dùng máy hút bụi.",
+                    "Đưa nước biển vào ruộng, phơi nắng để nước bay hơi.",
+                    "Đổ nước biển qua một lớp vải lọc."
+                ],
+                correct: 2,
+                explanation: "Người dân đưa nước biển vào ruộng cát, phơi nắng để nước bay hơi đi, những hạt muối sẽ đọng lại. Đây là phương pháp tách chất rắn ra khỏi dung dịch bằng cách bay hơi (Bài 3)."
+            },
+            {
+                type: "match", lesson: 3, level: "Nhận biết",
+                question: "Phân loại các trường hợp sau đây thành Hỗn hợp hoặc Dung dịch:", 
+                emoji: "🔍",
+                pairs: [
+                    { left: "Nước chanh có lẫn tép chanh", right: "Hỗn hợp" },
+                    { left: "Nước đường trong suốt", right: "Dung dịch" }
+                ],
+                distractors: ["Đều là chất tinh khiết"],
+                explanation: "Nước đường trong suốt, các chất hoà tan hoàn toàn là dung dịch. Nước chanh có tép chanh chưa hoà tan hết, ta vẫn thấy các phần riêng biệt nên gọi là hỗn hợp."
+            },
+            {
+                type: "mc", lesson: 4, level: "Nhận biết",
+                question: "Chất ở trạng thái nào có hình dạng và không gian (thể tích) XÁC ĐỊNH?",
+                emoji: "🧊",
+                options: [
+                    "Trạng thái Lỏng",
+                    "Trạng thái Khí",
+                    "Trạng thái Rắn",
+                    "Cả 3 trạng thái"
+                ],
+                correct: 2,
+                explanation: "Chất ở trạng thái rắn (như viên đá, thanh sắt) có hình dạng và chiếm khoảng không gian xác định (Bài 4)."
+            },
+            {
+                type: "fill", lesson: 4, level: "Hiểu",
+                question: "Sự biến đổi trạng thái:\nNước lỏng đun sôi sẽ bay hơi chuyển thành trạng thái [0]. Nước lỏng để vào ngăn đá sẽ đông đặc thành trạng thái [1].", 
+                emoji: "🌡️",
+                words: ["rắn", "khí", "mềm", "bột"],
+                correct: ["khí", "rắn"],
+                explanation: "Khi đun sôi, nước biến thành hơi nước (trạng thái khí). Khi làm lạnh dưới 0°C, nước đông đặc thành nước đá (trạng thái rắn) (Bài 4)."
+            },
+            {
+                type: "mc", lesson: 4, level: "Hiểu",
+                question: "Ngọn nến đang cháy, sáp nến chảy ra thành giọt lỏng. Đó là hiện tượng gì?",
+                emoji: "🕯️",
+                options: [
+                    "Biến đổi hoá học từ rắn sang khí.",
+                    "Sự biến đổi trạng thái từ Rắn sang Lỏng.",
+                    "Sự hoà tan của chất rắn.",
+                    "Sự biến đổi từ Lỏng sang Rắn."
+                ],
+                correct: 1,
+                explanation: "Dưới tác dụng của nhiệt, sáp nến bị đun nóng chuyển từ trạng thái rắn sang trạng thái lỏng. Khi nguội đi, nó lại chuyển về thể rắn (Bài 4)."
+            },
+            {
+                type: "mc", lesson: 5, level: "Hiểu",
+                question: "Hiện tượng nào sau đây là sự BIẾN ĐỔI HOÁ HỌC?",
+                emoji: "🔥",
+                options: [
+                    "Nước lỏng đông đặc thành đá lạnh.",
+                    "Xé nhỏ một tờ giấy.",
+                    "Đinh sắt để ngoài mưa bị gỉ sét.",
+                    "Pha đường vào nước ấm."
+                ],
+                correct: 2,
+                explanation: "Biến đổi hoá học là sự biến đổi từ chất này thành chất khác. Đinh sắt bị gỉ tạo thành chất mới màu nâu đỏ, giòn và xốp (Bài 5). Các hiện tượng còn lại chỉ là biến đổi vật lí/trạng thái."
+            },
+            {
+                type: "match", lesson: 5, level: "Vận dụng",
+                question: "Ghép các hiện tượng sau vào đúng loại biến đổi tương ứng:", 
+                emoji: "🧪",
+                pairs: [
+                    { left: "Gỗ bị đốt cháy thành than", right: "Biến đổi hoá học" },
+                    { left: "Bẻ gãy một cành cây khô", right: "Biến đổi vật lí" }
+                ],
+                distractors: ["Biến đổi sinh học"],
+                explanation: "Đốt cháy tạo ra chất mới (than, tro, khí) là biến đổi hoá học. Bẻ gãy chỉ làm thay đổi hình dạng bề ngoài, bản chất gỗ không đổi nên là biến đổi vật lí."
+            },
+            {
+                type: "mc", lesson: 5, level: "Vận dụng",
+                question: "Tại sao đốt bếp than trong phòng kín để sưởi ấm lại rất nguy hiểm?",
+                emoji: "⚠️",
+                options: [
+                    "Vì sẽ làm bẩn tường nhà.",
+                    "Vì than cháy sinh ra khí độc, gây ngạt thở.",
+                    "Vì dễ gây cháy các vật dụng bằng kim loại.",
+                    "Vì nhiệt độ phòng sẽ tăng lên quá 100°C."
+                ],
+                correct: 1,
+                explanation: "Khi đốt than (biến đổi hoá học), sinh ra khí các-bô-níc và khí độc. Trong phòng kín không có ô-xi lưu thông, hít phải khí này có thể bị ngạt hoặc tử vong (Bài 5)."
+            },
+            {
+                type: "fill", lesson: 6, level: "Vận dụng",
+                question: "Để bảo vệ môi trường, chúng ta nên tăng cường sử dụng phân bón [0] cho đất, hạn chế vứt rác thải [1] bừa bãi và tích cực [2].", 
+                emoji: "🌍",
+                words: ["hữu cơ", "nhựa", "trồng cây", "hoá học", "phá rừng"],
+                correct: ["hữu cơ", "nhựa", "trồng cây"],
+                explanation: "Phân bón hữu cơ an toàn, thân thiện với đất. Rác thải nhựa rất khó phân huỷ gây ô nhiễm môi trường trầm trọng. Trồng cây giúp chống xói mòn và giữ đất màu mỡ."
+            }
+        ];
+
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let playerName = "";
+        
+        let fillState = []; 
+        let fillWordIds = []; 
+        let matchState = {}; 
+        let activeMatchOption = null; 
+
+        // Tone.js Synth Setup for Sound Effects
+        const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+        synth.set({
+            oscillator: { type: "sine" },
+            envelope: { attack: 0.05, decay: 0.1, sustain: 0.3, release: 1 }
+        });
+
+        async function initAudio() {
+            if (Tone.context.state !== 'running') {
+                await Tone.start();
+            }
+        }
+
+        function playCorrectSound() {
+            const now = Tone.now();
+            synth.triggerAttackRelease(["C5", "E5", "G5"], "8n", now);
+            synth.triggerAttackRelease("C6", "4n", now + 0.15);
+        }
+
+        function playWrongSound() {
+            const now = Tone.now();
+            synth.triggerAttackRelease(["G3", "Eb3"], "8n", now);
+            synth.triggerAttackRelease("C3", "2n", now + 0.2);
+        }
+
+        function playWinSound() {
+            const now = Tone.now();
+            synth.triggerAttackRelease(["C4", "E4", "G4"], "8n", now);
+            synth.triggerAttackRelease(["F4", "A4", "C5"], "8n", now + 0.2);
+            synth.triggerAttackRelease(["G4", "B4", "D5"], "8n", now + 0.4);
+            synth.triggerAttackRelease(["C5", "E5", "G5", "C6"], "2n", now + 0.6);
+        }
+
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        function showScreen(id) {
+            ['start-screen', 'game-screen', 'end-screen', 'leaderboard-screen'].forEach(screen => {
+                document.getElementById(screen).classList.add('hidden');
+            });
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function startGame() {
+            const nameInput = document.getElementById('player-name').value.trim();
+            if (!nameInput) {
+                // Flash animation for empty input without alert
+                const inputEl = document.getElementById('player-name');
+                inputEl.classList.add('border-red-400', 'animate-pulse');
+                setTimeout(() => inputEl.classList.remove('border-red-400', 'animate-pulse'), 1000);
+                inputEl.placeholder = "Bạn quên nhập tên kìa!";
+                return;
+            }
+            
+            initAudio(); // Initialize audio context on first user interaction
+            
+            playerName = nameInput;
+            document.getElementById('display-name').innerText = playerName;
+            score = 0;
+            document.getElementById('display-score').innerText = score;
+            
+            // Randomize questions for the session (taking 15 questions)
+            currentQuestions = shuffleArray([...questionBank]).slice(0, 15);
+            currentIndex = 0;
+            
+            showScreen('game-screen');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = currentQuestions[currentIndex];
+            document.getElementById('question-number').innerText = `${currentIndex + 1}/${currentQuestions.length}`;
+            
+            // Setup Badge
+            const badge = document.getElementById('level-badge');
+            badge.innerText = `Mức độ: ${q.level}`;
+            if(q.level === "Nhận biết") badge.className = "absolute -top-4 -right-4 bg-gradient-to-r from-green-400 to-blue-500 text-white font-black px-4 py-2 rounded-xl shadow-lg transform rotate-3";
+            else if(q.level === "Hiểu") badge.className = "absolute -top-4 -right-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-black px-4 py-2 rounded-xl shadow-lg transform rotate-3";
+            else badge.className = "absolute -top-4 -right-4 bg-gradient-to-r from-pink-500 to-red-500 text-white font-black px-4 py-2 rounded-xl shadow-lg transform rotate-3";
+
+            document.getElementById('question-image').innerText = q.emoji;
+            const optsContainer = document.getElementById('options-container');
+            optsContainer.innerHTML = '';
+
+            /* Logic Trắc Nghiệm Đa Lựa Chọn */
+            if (q.type === "mc") {
+                document.getElementById('question-text').innerText = q.question;
+                optsContainer.className = "grid grid-cols-1 md:grid-cols-2 gap-4";
+                
+                let optionsWithIndex = q.options.map((opt, idx) => ({ text: opt, originalIndex: idx }));
+                optionsWithIndex = shuffleArray(optionsWithIndex);
+    
+                optionsWithIndex.forEach((opt) => {
+                    const btn = document.createElement('button');
+                    btn.className = "btn-3d btn-option text-lg md:text-xl font-bold p-4 w-full text-left h-full";
+                    btn.innerText = opt.text;
+                    btn.onclick = () => processMCAnswer(opt.originalIndex, q.correct, q.explanation);
+                    optsContainer.appendChild(btn);
+                });
+            } 
+            /* Logic Điền Khuyết */
+            else if (q.type === "fill") {
+                document.getElementById('question-text').innerText = ""; 
+                optsContainer.className = "w-full";
+                
+                fillState = new Array(q.correct.length).fill(null);
+                fillWordIds = new Array(q.correct.length).fill(null);
+                
+                // Parse question text to create blanks
+                let qText = q.question.replace(/\n/g, '<br>');
+                let html = `<p class="text-xl md:text-2xl font-extrabold text-gray-800 mb-8 leading-relaxed text-center">`;
+                let parts = qText.split(/\[\d+\]/);
+                for (let i = 0; i < parts.length; i++) {
+                    html += parts[i];
+                    if (i < q.correct.length) {
+                        html += `<span id="blank-${i}" class="blank-slot" onclick="removeFillWord(${i})">___</span>`;
+                    }
+                }
+                html += `</p>`;
+                
+                // Render Word Bank
+                html += `<div id="word-bank" class="flex flex-wrap justify-center gap-3 mb-8">`;
+                let words = shuffleArray([...q.words]);
+                words.forEach((w, idx) => {
+                    html += `<button id="word-btn-${idx}" class="word-bank-btn" onclick="addFillWord('${w}', ${idx})">${w}</button>`;
+                });
+                html += `</div>`;
+                html += `<button onclick="submitFillAnswer()" class="btn-3d btn-blue text-xl font-bold py-3 px-8 rounded-2xl w-full max-w-sm mx-auto block">Kiểm Tra</button>`;
+                
+                optsContainer.innerHTML = html;
+            }
+            /* Logic Ghép Nối */
+            else if (q.type === "match") {
+                document.getElementById('question-text').innerText = q.question;
+                optsContainer.className = "w-full";
+                
+                matchState = {};
+                activeMatchOption = null;
+                
+                let html = `<div class="mb-6">`;
+                q.pairs.forEach((p, idx) => {
+                    html += `<div class="match-row">
+                        <div class="match-left">${p.left}</div>
+                        <div id="match-slot-${idx}" class="match-slot" onclick="placeMatchWord(${idx})">Chọn đáp án bên dưới</div>
+                    </div>`;
+                });
+                html += `</div>`;
+                
+                // Render Options Bank
+                html += `<div id="match-bank" class="flex flex-wrap justify-center gap-3 mb-8">`;
+                let options = q.pairs.map(p => p.right).concat(q.distractors || []);
+                options = shuffleArray(options.map((opt, i) => ({text: opt, id: i})));
+                options.forEach(opt => {
+                    html += `<button id="match-opt-${opt.id}" class="word-bank-btn" onclick="selectMatchWord('${opt.text}', ${opt.id})">${opt.text}</button>`;
+                });
+                html += `</div>`;
+                html += `<button onclick="submitMatchAnswer()" class="btn-3d btn-blue text-xl font-bold py-3 px-8 rounded-2xl w-full max-w-sm mx-auto block">Kiểm Tra</button>`;
+                
+                optsContainer.innerHTML = html;
+            }
+        }
+
+        function addFillWord(word, btnIdx) {
+            const btn = document.getElementById(`word-btn-${btnIdx}`);
+            if (btn.classList.contains('selected')) return;
+            
+            // Tìm ô trống đầu tiên
+            const emptyIdx = fillState.indexOf(null);
+            if (emptyIdx !== -1) {
+                fillState[emptyIdx] = word;
+                fillWordIds[emptyIdx] = btnIdx;
+                
+                const blankEl = document.getElementById(`blank-${emptyIdx}`);
+                blankEl.innerText = word;
+                blankEl.classList.add('filled');
+                btn.classList.add('selected');
+            }
+        }
+
+        function removeFillWord(blankIdx) {
+            if (fillState[blankIdx] !== null) {
+                const btnIdx = fillWordIds[blankIdx];
+                const btn = document.getElementById(`word-btn-${btnIdx}`);
+                btn.classList.remove('selected');
+                
+                fillState[blankIdx] = null;
+                fillWordIds[blankIdx] = null;
+                
+                const blankEl = document.getElementById(`blank-${blankIdx}`);
+                blankEl.innerText = '___';
+                blankEl.classList.remove('filled');
+            }
+        }
+
+        function submitFillAnswer() {
+            const q = currentQuestions[currentIndex];
+            if (fillState.includes(null)) {
+                // Nhắc người dùng điền đầy đủ
+                const btn = document.querySelector('button[onclick="submitFillAnswer()"]');
+                btn.innerText = "Hãy điền kín các ô!";
+                btn.classList.replace('btn-blue', 'btn-orange');
+                setTimeout(() => {
+                    btn.innerText = "Kiểm Tra";
+                    btn.classList.replace('btn-orange', 'btn-blue');
+                }, 1500);
+                return;
+            }
+            
+            let isCorrect = true;
+            for (let i = 0; i < q.correct.length; i++) {
+                if (fillState[i] !== q.correct[i]) {
+                    isCorrect = false;
+                    break;
+                }
+            }
+            showResultModal(isCorrect, q.explanation);
+        }
+
+        function selectMatchWord(word, optId) {
+            const btn = document.getElementById(`match-opt-${optId}`);
+            if (btn.classList.contains('selected')) return;
+            
+            // Bỏ chọn nút cũ
+            if (activeMatchOption) {
+                document.getElementById(`match-opt-${activeMatchOption.id}`).classList.remove('active');
+            }
+            
+            activeMatchOption = { text: word, id: optId };
+            btn.classList.add('active');
+        }
+
+        function placeMatchWord(slotIdx) {
+            const slot = document.getElementById(`match-slot-${slotIdx}`);
+            
+            // Nếu slot đã có text, trả nó về Word Bank
+            if (matchState[slotIdx]) {
+                const oldOptId = matchState[slotIdx].id;
+                document.getElementById(`match-opt-${oldOptId}`).classList.remove('selected');
+                matchState[slotIdx] = null;
+                slot.innerText = 'Chọn đáp án bên dưới';
+                slot.classList.remove('filled');
+            }
+
+            // Đặt text mới vào Slot
+            if (activeMatchOption) {
+                matchState[slotIdx] = activeMatchOption;
+                slot.innerText = activeMatchOption.text;
+                slot.classList.add('filled');
+                
+                const btn = document.getElementById(`match-opt-${activeMatchOption.id}`);
+                btn.classList.remove('active');
+                btn.classList.add('selected');
+                activeMatchOption = null;
+            }
+        }
+
+        function submitMatchAnswer() {
+            const q = currentQuestions[currentIndex];
+            let isComplete = true;
+            for (let i = 0; i < q.pairs.length; i++) {
+                if (!matchState[i]) isComplete = false;
+            }
+            if (!isComplete) {
+                const btn = document.querySelector('button[onclick="submitMatchAnswer()"]');
+                btn.innerText = "Hãy ghép hết các ý!";
+                btn.classList.replace('btn-blue', 'btn-orange');
+                setTimeout(() => {
+                    btn.innerText = "Kiểm Tra";
+                    btn.classList.replace('btn-orange', 'btn-blue');
+                }, 1500);
+                return;
+            }
+            
+            let isCorrect = true;
+            for (let i = 0; i < q.pairs.length; i++) {
+                if (matchState[i].text !== q.pairs[i].right) {
+                    isCorrect = false;
+                    break;
+                }
+            }
+            showResultModal(isCorrect, q.explanation);
+        }
+
+        function processMCAnswer(selectedIndex, correctIndex, explanation) {
+            const isCorrect = selectedIndex === correctIndex;
+            showResultModal(isCorrect, explanation);
+        }
+
+        function showResultModal(isCorrect, explanation) {
+            const modal = document.getElementById('explanation-modal');
+            const title = document.getElementById('result-title');
+            const expText = document.getElementById('explanation-text');
+            const emoji = document.getElementById('result-emoji');
+            const decor = document.getElementById('modal-decor');
+
+            if (isCorrect) {
+                score += 10;
+                document.getElementById('display-score').innerText = score;
+                playCorrectSound();
+                fireworks();
+                
+                title.innerText = "Chính xác! Xuất sắc!";
+                title.className = "text-3xl font-black mb-4 text-green-500";
+                emoji.innerText = "🌟";
+                decor.className = "absolute top-0 left-0 w-full h-4 bg-gradient-to-r from-green-400 to-teal-500";
+            } else {
+                playWrongSound();
+                
+                const encouragements = ["Chưa đúng rồi, thử lại sau nhé!", "Gần đúng rồi, cố lên!", "Đừng buồn, kiến thức này hơi khó một chút!"];
+                title.innerText = encouragements[Math.floor(Math.random() * encouragements.length)];
+                title.className = "text-2xl font-black mb-4 text-orange-500";
+                emoji.innerText = "💪";
+                decor.className = "absolute top-0 left-0 w-full h-4 bg-gradient-to-r from-red-400 to-orange-500";
+            }
+
+            expText.innerText = explanation;
+            modal.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            document.getElementById('explanation-modal').classList.add('hidden');
+            currentIndex++;
+            if (currentIndex < currentQuestions.length) {
+                loadQuestion();
+            } else {
+                handleEndGame();
+            }
+        }
+
+        function handleEndGame() {
+            playWinSound();
+            document.getElementById('final-score').innerText = score;
+            
+            const msgEl = document.getElementById('final-message');
+            if (score === 100) {
+                msgEl.innerText = "Tuyệt đỉnh! Bạn là nhà khoa học thiên tài!";
+            } else if (score >= 70) {
+                msgEl.innerText = "Rất tốt! Nắm vững kiến thức cơ bản rồi đó.";
+            } else {
+                msgEl.innerText = "Cố gắng lên nhé! Hãy đọc lại sách giáo khoa và thử lại nào.";
+            }
+
+            showScreen('end-screen');
+        }
+
+        function saveAndShowLeaderboard() {
+            // Save to LocalStorage
+            let lb = JSON.parse(localStorage.getItem('khoaHoc5Leaderboard') || '[]');
+            lb.push({ name: playerName, score: score, date: new Date().toLocaleDateString('vi-VN') });
+            // Sort descending by score
+            lb.sort((a, b) => b.score - a.score);
+            // Keep top 10
+            lb = lb.slice(0, 10);
+            localStorage.setItem('khoaHoc5Leaderboard', JSON.stringify(lb));
+
+            showLeaderboard();
+        }
+
+        function showLeaderboard() {
+            const lb = JSON.parse(localStorage.getItem('khoaHoc5Leaderboard') || '[]');
+            const listEl = document.getElementById('leaderboard-list');
+            listEl.innerHTML = '';
+
+            if(lb.length === 0) {
+                listEl.innerHTML = '<li class="text-center text-gray-400 font-bold p-4">Chưa có ai chơi. Hãy là người đầu tiên!</li>';
+            } else {
+                lb.forEach((entry, idx) => {
+                    let medal = "🏅";
+                    if(idx === 0) medal = "🥇";
+                    if(idx === 1) medal = "🥈";
+                    if(idx === 2) medal = "🥉";
+
+                    const li = document.createElement('li');
+                    li.className = "flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-100 font-bold text-lg text-gray-700";
+                    li.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">${medal}</span>
+                            <span>${entry.name}</span>
+                        </div>
+                        <div class="text-orange-500">${entry.score}đ</div>
+                    `;
+                    listEl.appendChild(li);
+                });
+            }
+
+            showScreen('leaderboard-screen');
+        }
+
+        function resetGame() {
+            document.getElementById('player-name').value = '';
+            showScreen('start-screen');
+        }
+
+        function backToHome() {
+            resetGame();
+        }
+
+        const canvas = document.getElementById('fireworks-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.radius = Math.random() * 4 + 2;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 8 + 2;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.02 + 0.01;
+                this.gravity = 0.1;
+            }
+            update() {
+                this.vy += this.gravity;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= this.decay;
+            }
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function animateFireworks() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw(ctx);
+                if (particles[i].alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+            if(particles.length > 0) {
+                requestAnimationFrame(animateFireworks);
+            }
+        }
+
+        function fireworks() {
+            const colors = ['#ff0044', '#00ff44', '#4400ff', '#ffff00', '#00ffff', '#ff00ff'];
+            const startX = window.innerWidth / 2;
+            const startY = window.innerHeight / 2;
+
+            for(let i=0; i < 80; i++) {
+                particles.push(new Particle(startX, startY, colors[Math.floor(Math.random() * colors.length)]));
+            }
+            
+            // Create a few more explosions randomly
+            setTimeout(() => {
+                for(let i=0; i < 50; i++) {
+                    particles.push(new Particle(startX - 100, startY - 100, colors[Math.floor(Math.random() * colors.length)]));
+                }
+            }, 300);
+
+            setTimeout(() => {
+                for(let i=0; i < 50; i++) {
+                    particles.push(new Particle(startX + 100, startY - 50, colors[Math.floor(Math.random() * colors.length)]));
+                }
+            }, 600);
+
+            animateFireworks();
+        }
+
+    </script>
+</body>
+</html>
